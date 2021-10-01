@@ -1,7 +1,8 @@
 <RCC>
     <qresource prefix="/">
-        <file>Imagenes/Bomberman.png</file>
         <file>Imagenes/Enemigo.png</file>
         <file>Imagenes/Bomba.png</file>
+        <file>Imagenes/Onda.png</file>
+        <file>Imagenes/Bomberman.png</file>
     </qresource>
 </RCC>

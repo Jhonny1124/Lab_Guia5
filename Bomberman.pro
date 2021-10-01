@@ -12,12 +12,14 @@ SOURCES += \
     bomba.cpp \
     main.cpp \
     bomberman.cpp \
-    man.cpp
+    man.cpp \
+    onda.cpp
 
 HEADERS += \
     bomba.h \
     bomberman.h \
-    man.h
+    man.h \
+    onda.h
 
 FORMS += \
     bomberman.ui

@@ -6,19 +6,22 @@
 #define image_Ladrillo "../Bomberman/Imagenes/Ladrillo.jpg"
 
 static int pos_x = 105, pos_y = 105;
-short int cont =-1, cont1 = -1;
+short int cont =-1, cont1 = -1, cont2 = 0;
 short int cop_pos_x = pos_x, cop_pos_y = pos_y;
+short int PosBomX, PosBomY, bomba1 = 0;
 short int posEnemigos[6][2], prueba[6];
-short int tiempo = 200;
+short int tiempo = 300, puntos = 0;
 
 Bomberman::Bomberman(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Bomberman)
 {
     ui->setupUi(this);
+    connect(Explos, SIGNAL(timeout()), this, SLOT(Explosion()));
     scena = new QGraphicsScene;
     hombre = new man();
     bomba = new Bomba();
+    onda = new Onda();
     puerta = new QGraphicsRectItem;
 
     QPen pen(QColor(0,0,0));
@@ -66,12 +69,12 @@ Bomberman::Bomberman(QWidget *parent)
             }
             if(nivel[y][x] == 3){
                 cont1++;
-                enemigos.push_back(new man(1));
-                enemigos.back()->setPos((x*TamBloque)+(TamBloque/2),(y*TamBloque)+(TamBloque/2));
+                enemigos.at(cont1) = new man(1);
+                enemigos.at(cont1)->setPos((x*TamBloque)+(TamBloque/2),(y*TamBloque)+(TamBloque/2));
                 posEnemigos[cont1][0] = (x*TamBloque)+(TamBloque/2);
                 posEnemigos[cont1][1] = (y*TamBloque)+(TamBloque/2);
-                prueba[cont] = 0;
-                scena->addItem(enemigos.back());
+                prueba[cont1] = 0;
+                scena->addItem(enemigos.at(cont1));
             }
         }
     }
@@ -86,7 +89,6 @@ Bomberman::Bomberman(QWidget *parent)
 
     ui->graphicsView->setSceneRect(105,105,70,70);
     ui->graphicsView->setScene(scena);
-    ui->lcdNumber_2->display(0);
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(Colisiones()));
@@ -99,6 +101,7 @@ Bomberman::Bomberman(QWidget *parent)
     QTimer *time = new QTimer(this);
     connect(time, SIGNAL(timeout()), this, SLOT(Time()));
     time->start(1000);
+
 
     ui->graphicsView->show();
 }
@@ -129,8 +132,12 @@ void Bomberman::keyPressEvent(QKeyEvent *e)
         hombre->direccion(0);
         break;
     case Qt::Key_Space:
-        scena->addItem(bomba);
-        bomba->setPos(pos_x, pos_y);
+        if(bomba1 == 0){
+            PosBomX = pos_x, PosBomY = pos_y;
+            scena->addItem(bomba);
+            bomba->setPos(PosBomX, PosBomY);
+            Explos->start(1000);
+        }
         break;
     default:
         break;
@@ -141,6 +148,7 @@ void Bomberman::keyPressEvent(QKeyEvent *e)
 void Bomberman::Colisiones()
 {
     // Interaccines entre los objetos de la escena //
+
 
     for(int i = 0; i < int(Solid.size()); i++){
         if(hombre->collidesWithItem(Solid.at(i))){
@@ -197,16 +205,10 @@ void Bomberman::Colisiones()
              hombre->vidas--;
          }
     }
-    if(tiempo == 0){
-        tiempo = 200;
-        pos_x = 105, cop_pos_x = 105;
-        pos_y = 105, cop_pos_y = 105;
-        hombre->vidas--;
-    }
-    if(hombre->vidas == 0){
+
+    if(hombre->collidesWithItem(puerta)){
         exit(1);
     }
-    ui->lcdNumber->display(hombre->vidas);
     hombre->setPos(pos_x, pos_y);
 
 }
@@ -217,36 +219,46 @@ void Bomberman::MovEnemys()
     // Movimiento de los enemigos //
 
     for(int e = 0; e < int(enemigos.size()); e++){
-        if(prueba[e] == 0){
-            enemigos.at(e)->setPos(posEnemigos[e][0]-5,posEnemigos[e][1]);
-            posEnemigos[e][0] -= 5;
-        }
-        else{
-            enemigos.at(e)->setPos(posEnemigos[e][0]+5,posEnemigos[e][1]);
-            posEnemigos[e][0] += 5;
-        }
-        for(int i = 0; i < int(Brick.size()); i++){
-            if(enemigos.at(e)->collidesWithItem(Brick.at(i))){
+        if(enemigos.at(e) != NULL){
+            if(prueba[e] == 0){
+                enemigos.at(e)->setPos(posEnemigos[e][0]-5,posEnemigos[e][1]);
+                posEnemigos[e][0] -= 5;
+            }
+            else{
+                enemigos.at(e)->setPos(posEnemigos[e][0]+5,posEnemigos[e][1]);
+                posEnemigos[e][0] += 5;
+            }
+            for(int i = 0; i < int(Brick.size()); i++){
+                if(enemigos.at(e)->collidesWithItem(Brick.at(i))){
+                    if(prueba[e] == 0){
+                        prueba[e] = -1;
+                    }
+                    else{
+                        prueba[e] = 0;
+                    }
+                    break;
+                }
+            }
+            for(int i = 0; i < int(Solid.size()); i++){
+                if(enemigos.at(e)->collidesWithItem(Solid.at(i))){
+                    if(prueba[e] == 0){
+                        prueba[e] = -1;
+                    }
+                    else{
+                        prueba[e] = 0;
+                    }
+                    break;
+                }
+             }
+            if(enemigos.at(e)->collidesWithItem(bomba)){
                 if(prueba[e] == 0){
                     prueba[e] = -1;
                 }
                 else{
                     prueba[e] = 0;
                 }
-                break;
             }
         }
-        for(int i = 0; i < int(Solid.size()); i++){
-            if(enemigos.at(e)->collidesWithItem(Solid.at(i))){
-                if(prueba[e] == 0){
-                    prueba[e] = -1;
-                }
-                else{
-                    prueba[e] = 0;
-                }
-                break;
-            }
-         }
     }
 }
 
@@ -255,4 +267,81 @@ void Bomberman::Time()
     // Timer del juego //
 
     ui->lcdNumber_3->display(tiempo--);
+    if(tiempo == 0){
+        tiempo = 200;
+        pos_x = 105, cop_pos_x = 105;
+        pos_y = 105, cop_pos_y = 105;
+        hombre->vidas--;
+    }
+    if(hombre->vidas == 0){
+        exit(1);
+    }
+    ui->lcdNumber->display(hombre->vidas);
+}
+
+void Bomberman::Explosion()
+{
+    //Animacion y acciones de la bomba//
+        cont2++;
+        bomba1++;
+        if(cont2 == 3){
+            scena->removeItem(bomba);
+            for(int i = 0; i < 5; i++){
+                PosExplosion.at(i) = new Onda();
+                if(i == 0){
+                    PosExplosion.at(i)->setPos(PosBomX, PosBomY);
+                }
+                else if(i == 1){
+                    PosExplosion.at(i)->setPos(PosBomX+60, PosBomY);
+                }
+                else if(i == 2){
+                    PosExplosion.at(i)->setPos(PosBomX-60, PosBomY);
+                }
+                else if(i == 3){
+                    PosExplosion.at(i)->setPos(PosBomX, PosBomY+60);
+                }
+                else if(i == 4){
+                    PosExplosion.at(i)->setPos(PosBomX, PosBomY-60);
+                }
+                scena->addItem(PosExplosion.at(i));
+            }
+            for(int i = 0; i < 5; i++){
+                if(PosExplosion.at(i)->collidesWithItem(hombre)){
+                    hombre->vidas--;
+                    pos_x = 105, pos_y = 105;
+                    hombre->setPos(pos_x,pos_y);
+                    ui->graphicsView->setSceneRect(pos_x,pos_y,70,70);
+                    if(hombre->vidas == 0){
+                        exit(1);
+                    }
+                    ui->lcdNumber->display(hombre->vidas);
+                }
+                for(int b = 0; b < int(Brick.size()); b++){
+                    if(PosExplosion.at(i)->collidesWithItem(Brick.at(b))){
+                        scena->removeItem(Brick.at(b));
+                        Brick.at(b) = NULL;
+                        puntos += 100;
+                    }
+                }
+                for(int e = 0; e < int(enemigos.size()); e++){
+                    if(PosExplosion.at(i)->collidesWithItem(enemigos.at(e))){
+                        scena->removeItem(enemigos.at(e));
+                        enemigos.at(e) = NULL;
+                        puntos +=800;
+                    }
+                }
+
+            }
+        }
+        if(cont2 == 4){
+            for(int i = 0; i < 5; i++){
+                scena->removeItem(PosExplosion.at(i));
+                PosExplosion.at(i) = NULL;
+                cont2 = 0;
+                bomba1 = 0;
+                Explos->stop();
+            }
+        }
+        ui->lcdNumber_2->display(puntos);
+
 }

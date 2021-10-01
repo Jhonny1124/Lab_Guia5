@@ -9,6 +9,7 @@
 #include <QDesktopWidget>
 #include <QDebug>
 #include <vector>
+#include <list>
 #include <array>
 #include <QGraphicsRectItem>
 #include <QKeyEvent>
@@ -16,6 +17,7 @@
 #include <QDebug>
 #include "man.h"
 #include "bomba.h"
+#include "onda.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Bomberman; }
@@ -35,18 +37,24 @@ protected:
 private:
     Ui::Bomberman *ui;
 
+    QTimer *Explos = new QTimer(this);
+
     QGraphicsScene *scena;
     man *hombre;
     Bomba *bomba;
+    Onda *onda;
     QGraphicsRectItem *puerta;
     std::vector<QGraphicsRectItem *> Solid;
     std::array<QGraphicsRectItem *,55> Brick;
-    std::vector<man *> enemigos;
+    std::array<man *, 6> enemigos;
+    std::array<Onda *, 5> PosExplosion;
+
 
 public slots:
 
     void Colisiones();
     void MovEnemys();
     void Time();
+    void Explosion();
 };
 #endif // BOMBERMAN_H
