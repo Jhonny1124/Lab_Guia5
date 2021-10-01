@@ -197,6 +197,12 @@ void Bomberman::Colisiones()
              hombre->vidas--;
          }
     }
+    if(tiempo == 0){
+        tiempo = 200;
+        pos_x = 105, cop_pos_x = 105;
+        pos_y = 105, cop_pos_y = 105;
+        hombre->vidas--;
+    }
     if(hombre->vidas == 0){
         exit(1);
     }
