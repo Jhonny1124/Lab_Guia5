@@ -8,7 +8,7 @@
 static int pos_x = 105, pos_y = 105;
 short int cont =-1, cont1 = -1, cont2 = 0;
 short int cop_pos_x = pos_x, cop_pos_y = pos_y;
-short int PosBomX, PosBomY, bomba1 = 0;
+short int PosBomX, PosBomY, bomba1 = 0, cont_bom = 0;
 short int posEnemigos[6][2], prueba[6];
 short int tiempo = 300, puntos = 0;
 
@@ -35,13 +35,13 @@ Bomberman::Bomberman(QWidget *parent)
         {1,0,1,0,1,2,1,0,1,0,1,0,1,2,1,0,1,0,1,0,1,0,1,0,1,2,1,0,1,2,1},
         {1,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,3,2,0,0,0,1},
         {1,2,1,2,1,0,1,0,1,0,1,2,1,0,1,0,1,0,1,0,1,0,1,2,1,0,1,0,1,0,1},
-        {1,2,0,0,0,0,0,0,0,2,0,0,0,2,0,2,0,0,0,2,0,0,0,0,0,0,2,0,0,0,1},
+        {1,2,0,0,0,0,0,3,0,2,0,0,0,2,0,2,0,0,0,2,0,0,0,0,0,0,2,0,0,0,1},
         {1,2,1,2,1,2,1,0,1,2,1,0,1,0,1,0,1,2,1,0,1,0,1,0,1,0,1,0,1,2,1},
         {1,0,3,0,0,0,2,0,0,0,2,0,0,0,0,3,0,0,0,2,0,0,0,0,0,2,2,0,0,0,1},
         {1,0,1,2,1,0,1,2,1,0,1,0,1,0,1,2,1,0,1,0,1,2,1,0,1,0,1,2,1,0,1},
         {1,0,0,0,2,0,0,2,0,2,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,1},
         {1,2,1,0,1,2,1,0,1,0,1,2,1,0,1,0,1,2,1,0,1,0,1,0,1,0,1,2,1,0,1},
-        {1,0,2,0,0,0,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,3,0,0,0,0,2,0,0,3,1},
+        {1,0,2,0,0,0,0,0,0,2,0,0,0,0,0,2,0,0,0,0,0,3,0,0,0,0,2,0,0,0,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     };
 
@@ -132,6 +132,8 @@ void Bomberman::keyPressEvent(QKeyEvent *e)
         hombre->direccion(0);
         break;
     case Qt::Key_Space:
+        cont_bom = 1;
+        bomba = new Bomba();
         if(bomba1 == 0){
             PosBomX = pos_x, PosBomY = pos_y;
             scena->addItem(bomba);
@@ -195,6 +197,29 @@ void Bomberman::Colisiones()
                 pos_y -= 5;
                 cop_pos_y = pos_y;
                 break;
+            }
+        }
+    }
+    if(!hombre->collidesWithItem(bomba) and cont_bom == 1){
+        cont_bom = 2;
+    }
+    if(cont_bom == 2){
+        if(hombre->collidesWithItem(bomba)){
+            if(pos_x < cop_pos_x){
+                pos_x += 5;
+                cop_pos_x = pos_x;
+            }
+            else if(pos_x > cop_pos_x){
+                pos_x -= 5;
+                cop_pos_x = pos_x;
+            }
+            else if(pos_y < cop_pos_y){
+                pos_y += 5;
+                cop_pos_y = pos_y;
+            }
+            else if(pos_y > cop_pos_y){
+                pos_y -= 5;
+                cop_pos_y = pos_y;
             }
         }
     }
@@ -286,6 +311,8 @@ void Bomberman::Explosion()
         bomba1++;
         if(cont2 == 3){
             scena->removeItem(bomba);
+            bomba = NULL;
+            cont_bom = 0;
             for(int i = 0; i < 5; i++){
                 PosExplosion.at(i) = new Onda();
                 if(i == 0){
